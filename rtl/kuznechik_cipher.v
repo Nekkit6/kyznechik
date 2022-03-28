@@ -94,22 +94,30 @@ begin
             end
             `S_PHASE:
             begin
-                address[127:112]  <= {S_box_mem[address[127:120]], S_box_mem[address[119:112]]};
-                address[111:96]   <= {S_box_mem[address[111:104]], S_box_mem[address[103:96]]};
-                address[95:80]    <= {S_box_mem[address[95:88]], S_box_mem[address[87:80]]};
-                address[79:64]    <= {S_box_mem[address[79:72]], S_box_mem[address[71:64]]};
-                address[63:48]    <= {S_box_mem[address[63:56]], S_box_mem[address[55:48]]};
-                address[47:32]    <= {S_box_mem[address[47:40]], S_box_mem[address[39:32]]};
-                address[31:16]    <= {S_box_mem[address[31:24]], S_box_mem[address[23:16]]};
-                address[15:0]     <= {S_box_mem[address[15:8]], S_box_mem[address[7:0]]};
+                address[127:120]  <= S_box_mem[address[127:120]];
+		address[121:112]  <= S_box_mem[address[119:112]];
+                address[111:104]  <= S_box_mem[address[111:104]];
+                address[105:96]   <= S_box_mem[address[103:96]];
+                address[95:88]    <= S_box_mem[address[95:88]];
+                address[89:80]    <= S_box_mem[address[87:80]];
+                address[79:72]    <= S_box_mem[address[79:72]];
+                address[73:64]    <= S_box_mem[address[71:64]];
+                address[63:56]    <= S_box_mem[address[63:56]];
+                address[57:48]    <= S_box_mem[address[55:48]];
+                address[47:40]    <= S_box_mem[address[47:40]];
+                address[41:32]    <= S_box_mem[address[39:32]];
+                address[31:24]    <= S_box_mem[address[31:24]];
+                address[25:16]    <= S_box_mem[address[23:16]];
+                address[15:8]     <= S_box_mem[address[15:8]];
+                address[9:0]      <= S_box_mem[address[7:0]];
                 
                 state <= `L_PHASE;
                 count <= 0;
             end
             `L_PHASE:
             begin
-                value = L_mul_148_mem[address[127:120]] ^ L_mul_32_mem[address[119:112]] ^ L_mul_133_mem[address[111:104]] ^ L_mul_16_mem[address[103:96]] ^ L_mul_194_mem[address[95:88]] ^ L_mul_192_mem[address[87:80]] ^ address[79:72] ^ L_mul_251_mem[address[71:64]] ^ address[63:56] ^ L_mul_192_mem[address[55:48]] ^ L_mul_194_mem[address[47:40]] ^ L_mul_16_mem[address[39:32]] ^ L_mul_133_mem[address[31:24]] ^ L_mul_32_mem[address[23:16]] ^ L_mul_148_mem[address[15:8]] ^ address[7:0];
-                address <= {value, address[127:8]};
+                addres <= {L_mul_148_mem[address[127:120]] ^ L_mul_32_mem[address[119:112]] ^ L_mul_133_mem[address[111:104]] ^ L_mul_16_mem[address[103:96]] ^ L_mul_194_mem[address[95:88]] ^ L_mul_192_mem[address[87:80]] ^ address[79:72] ^ L_mul_251_mem[address[71:64]] ^ address[63:56] ^ L_mul_192_mem[address[55:48]] ^ L_mul_194_mem[address[47:40]] ^ L_mul_16_mem[address[39:32]] ^ L_mul_133_mem[address[31:24]] ^ L_mul_32_mem[address[23:16]] ^ L_mul_148_mem[address[15:8]] ^ address[7:0],address[127:8]};
+                //address <= {value, address[127:8]};
                 count <= count + 1;
                 if(count == 15)
                     state <= `KEY_PHASE;
