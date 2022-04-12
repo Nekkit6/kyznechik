@@ -11,12 +11,12 @@ module kuznechik_cipher(
                         ack_i,      // Сигнал подтверждения приема зашифрованных данных
                 [127:0] data_i,     // Шифруемые данные
 
-    output              busy_o,     // Сигнал, сообщающий о невозможности приёма
+    output     wire     busy_o,     // Сигнал, сообщающий о невозможности приёма
                                     // очередного запроса на шифрование, поскольку
                                     // модуль в процессе шифрования предыдущего
                                     // запроса
-           reg          valid_o,    // Сигнал готовности зашифрованных данных
-           reg  [127:0] data_o      // Зашифрованные данные
+           wire          valid_o,    // Сигнал готовности зашифрованных данных
+           wire  [127:0] data_o      // Зашифрованные данные
 );
 
 
@@ -35,11 +35,13 @@ reg [2:0]   state;
 reg [127:0] data;
 reg [7:0]   value;
 reg         busy;
+reg         valid;
+reg [127:0] datao;
 reg [3:0]   count;
 reg [3:0]   i;
 assign  busy_o = busy;
-
-
+assign valid_o = valid;
+assign data_o = datao;
 
 initial begin
     $readmemh("keys.mem",key_mem );
@@ -62,7 +64,7 @@ begin
         state <= `IDLE;
         value <= 0;
         busy <= 0;
-        valid_o <= 0;
+        valid <= 0;
         i <= 0;
     end
     else
@@ -75,7 +77,7 @@ begin
                     state <= `KEY_PHASE;
                     value <= 0;
                     busy <= 1;
-                    valid_o <= 0;
+                    valid <= 0;
                     data <= data_i;
                     i <= 0;
                 end
@@ -88,8 +90,8 @@ begin
                 if (i == 9)
                 begin
                     state <= `FINISH;
-                    valid_o <= 1;
-                    data_o <= data;
+                    valid <= 1;
+                    datao <= data;
                 end
             end
             `S_PHASE:
@@ -134,7 +136,7 @@ begin
                         data <= data_i;
                         busy <= 0;
                         value <= 0;
-                        valid_o <= 0;
+                        valid <= 0;
                         i <= 0;
                     end
                 else if (ack_i == 1) 
@@ -142,7 +144,7 @@ begin
                         state <= `IDLE;
                         busy <= 0;
                         value <= 0;
-                        valid_o <= 0;
+                        valid <= 0;
                         i <= 0;
                     end
                     
