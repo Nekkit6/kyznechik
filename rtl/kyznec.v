@@ -148,11 +148,6 @@ begin
                         i <= 0;
                     end
                     
-//                 if (ack_i == 1)
-//                begin
-//                    valid_o <= 0;
-//                    busy <= 0;
-//                end
                 
              end
         endcase    

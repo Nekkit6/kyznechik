@@ -9,141 +9,85 @@ module APB(
     input           PSEL,
                     PENABLE,
                     PWRITE,
-                    busy,
-                    valid,
             [31:0]  PWDATA,
-            [3:0]   PSTRB,
-                    
-            [127:0] data_o,
-                    
-    output    reg           PREADY ,
-              reg[31:0]  PRDATA = 0,
-              reg        PSLVERR = 0
+            [3:0]   PSTRB,                    
+                
+    output              
+                    PSLVERR,
+          reg       PREADY,
+          reg[31:0] PRDATA
+                      
     );
+    localparam addr_data_out_l = 6'h14;
+    localparam addr_data_out_h = 6'h23;
+    localparam addr_data_in_l = 6'h4;
+    localparam addr_data_in_h = 6'h13;
+    localparam length_mem = 6'h23;
     
-    //wire busy_o;
-    //wire valido;
-  //  wire datao;
-    //wire PREADYw;
-    wire RESETn;
-    wire [127:0] data_i;
-    //wire [7:0] data0;
-    wire req_ack;
-
-    
-    integer i;
-    
-    kuznechik_cipher DUT(
-        .clk_i      (PCLK),
-        .resetn_i   (RESETn),
-        .data_i     (data_i),
-        .request_i  (req_ack),
-        .ack_i      (req_ack),
-        .data_o     (data_o),
-        .valid_o    (valid),
-        .busy_o     (busy)
-    );
-    
-   
-    //wire         busy; 
-    //reg [7:0]   REQ_ASK;
-    //reg         valid;
-    //reg [7:0]   BUSY;
-    //reg [7:0]   data_in [0:15];
-    //reg [7:0]   data_out;
+    wire [127:0]    data_out;
+    wire            reset_n;
+    wire [127:0]    data_in;
+    wire            req_ack;
+    wire            busy;
+    wire            valid;
     
     reg [7:0] memory [0:35];
     
-   
-    //assign data0 = memory[4];
-    //assign valid = memory[2];
-    //assign busy  = memory[3];
-    assign data_i = {memory[19],memory[18],memory[17],memory[16],memory[15],memory[14],memory[13],memory[12],
-                     memory[11],memory[10],memory[9],memory[8],memory[7],memory[6],memory[5],memory[4]};
-    
-    assign RESETn = PRESETn && memory[0]; 
-    assign req_ack = (memory[1])? 1:0;
-    //assign PREADY = PENABLE;
-    //assign PREADY = PREADYw;
-    
-    always @(posedge PCLK)
-    begin
-        PREADY <= PENABLE;
-        if (!PRESETn) begin
-            //for (i = 1; i < 32; i = i + 1) begin
-            //    memory[i]  <= 8'h00;
-            //end
-            //memory[0]  <= 8'h1;
-            
-            $readmemh("RST_mem.mem",memory);
-        end
+    integer r,i; 
+  
+    kuznechik_cipher DUT(
+        .clk_i      (PCLK),
+        .resetn_i   (reset_n),
+        .data_i     (data_in),
+        .request_i  (req_ack),
+        .ack_i      (req_ack),
+        .data_o     (data_out),
+        .valid_o    (valid),
+        .busy_o     (busy)
+    );
+       
+    assign data_in = {memory[19],memory[18],memory[17],memory[16],memory[15],memory[14],memory[13],memory[12],
+                     memory[11],memory[10],memory[9],memory[8],memory[7],memory[6],memory[5],memory[4]};    
+    assign reset_n = PRESETn && memory[0][0]; 
+    assign req_ack = memory[1][0];    
+    assign PSLVERR = ( ((PADDR <=  addr_data_out_h) && (PADDR >= addr_data_out_l) && PWRITE) || (!PADDR && PSTRB[3:2]) )? 1:0; 
+         
+    always @(posedge PCLK) begin    
+        if (!PRESETn) begin           
+            memory[0][0] <= 'b1;
+            PREADY <= 'b0;
+            for(r = 1;  r <= length_mem; r = r + 1)begin
+                memory[r] <= 8'b0;
+            end
+        end 
         else begin
-            memory[2]  <= valid;
-            memory[3]  <= busy;
-            if(valid) begin
-                for(i = 0;  i < 128; i = i + 8)begin
-                    memory[36'h14 + i/8] <= {data_o[i+7],data_o[i+6],data_o[i+5],data_o[i+4],data_o[i+3],data_o[i+2],data_o[i+1],data_o[i]}; 
-                end
+            PREADY <= PENABLE;
+            memory[2][0]  <= valid;
+            memory[3][0]  <= busy;
+            if(valid) begin                     
+                for(i = 0;  i < 128; i = i + 1)begin
+                    memory[addr_data_out_l + i/8][i % 8] <= data_out[i];  //localparam 
+                end    
             end
             if (PSEL) begin
-                if(PWRITE) begin
-                    //PSLVERR <= 1'b0;
-                    if ((PADDR <= 'h23) && (PADDR >= 'h14)) begin
-                        PSLVERR <= 1'b1;
-                    end else 
+                if(PWRITE && PENABLE) begin
                     if (PADDR == 32'b0) begin
-                          //PSLVERR <= 1'b0;
-//                        if(PSTRB[0])
-//                            memory[PADDR] <= PWDATA[7:0];
-//                        else if(PSTRB[1])
-//                            memory[PADDR] <= PWDATA[15:8];
-//                        else if(PSTRB[2])
-//                            memory[PADDR] <= PWDATA[23:16];
-//                        else if(PSTRB[3])
-//                            memory[PADDR] <= PWDATA[31:24];
-                        if (PENABLE) begin
-                            memory[0] <= (PSTRB[0])?   PWDATA[7:0] : 8'b0;
-                            memory[1] <= (PSTRB[1])?   PWDATA[15:8]: 8'b0;
-                            //PSLVERR   <= (PSTRB[3:2])? 1:0;
-                            PSLVERR   <= (PSTRB[3:2])? 1:0;
-                            //PREADY <= 'b1;
-                        end else begin
-                            //PREADY <= 'b0;
-                            PSLVERR <= 'b0;
-                        end
-                    end else if ((32'h4 <= PADDR <= 32'h13)) begin
-                        PSLVERR <= 1'b0;
+                        memory[0] <= (PSTRB[0])?   PWDATA[7:0] : 8'b0;
+                        memory[1] <= (PSTRB[1])?   PWDATA[15:8]: 8'b0;
+                    end 
+                    else if (addr_data_in_l <= PADDR <= addr_data_in_h) begin
                         memory[PADDR]     <= PWDATA[7:0];
                         memory[PADDR + 1] <= PWDATA[15:8];
                         memory[PADDR + 2] <= PWDATA[23:16];
                         memory[PADDR + 3] <= PWDATA[31:24];
-                    end
-                
+                    end               
                 end else begin  //////////////////////////!PWRITE
-                    //if((32'h14 <= PADDR) && (PADDR <= 32'h23)) begin
-                        //if (!PADDR && !PSTRB[2] && !PSTRB[3]) begin
-                      //      PSLVERR <= 'b1;
-                     //   end else begin
-                            PSLVERR <= 'b0;
-                            //PREADY <= 'b1;
-                            PRDATA[7:0]     <= memory[PADDR];
-                            PRDATA[15:8]    <= memory[PADDR + 1];
-                            PRDATA[23:16]   <= memory[PADDR + 2];
-                            PRDATA[31:24]   <= memory[PADDR + 3];
-                    //    end
-                    //end else if(32'h2 <= PADDR <= 32'h3) begin
-                      //  if (PENABLE) begin
-                        //    PRDATA <= memory[PADDR];
-                        //    PREADY <= 'b1;
-                        //end
-                    //end
-                end
-                               
-            end else begin
-                //PREADY <= 8'b0;  //sel == 0
-            end
-                        
-        end
-        
+                    PRDATA[7:0]     <= memory[PADDR];
+                    PRDATA[15:8]    <= memory[PADDR + 1];
+                    PRDATA[23:16]   <= memory[PADDR + 2];
+                    PRDATA[31:24]   <= memory[PADDR + 3];
+                end                              
+            end                                   
+        end       
     end    
 endmodule
