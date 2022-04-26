@@ -65,8 +65,8 @@ module APB(
             memory[2][0]  <= valid;
             memory[3][0]  <= busy;
             if(valid) begin                     
-                for(i = 0;  i < 128; i = i + 1)begin
-                    memory[addr_data_out_l + i/8][i % 8] <= data_out[i];  //localparam 
+                for(i = 0;  i < 16; i = i + 1)begin
+                    memory[addr_data_out_l + i] <= data_out[i*8+:8];  
                 end    
             end
             if (PSEL) begin
