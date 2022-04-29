@@ -32,6 +32,7 @@ module APB(
     wire            valid;
     
     reg [7:0] memory [0:35];
+    reg [1:0] APB_busy;        
     
     integer r,i; 
   
@@ -50,7 +51,12 @@ module APB(
                      memory[11],memory[10],memory[9],memory[8],memory[7],memory[6],memory[5],memory[4]};    
     assign reset_n = PRESETn && memory[0][0]; 
     assign req_ack = memory[1][0];    
-    assign PSLVERR = ( ((PADDR <=  addr_data_out_h) && (PADDR >= addr_data_out_l) && PWRITE) || (!PADDR && PSTRB[3:2]) )? 1:0; 
+    assign PSLVERR = ( ((PADDR <=  addr_data_out_h) && (PADDR >= addr_data_out_l) && PWRITE) || (!PADDR && PSTRB[3:2]) || (APB_busy[1:0] == 'b11))? 1:0; 
+         
+    always @(posedge PREADY) begin
+        APB_busy[0] <= PWRITE && (PWDATA == 'h101) && (PADDR == 'h0);
+        APB_busy[1] <= APB_busy[0];
+    end     
          
     always @(posedge PCLK) begin    
         if (!PRESETn) begin           
@@ -61,6 +67,7 @@ module APB(
             end
         end 
         else begin
+            //APB_busy <= PWRITE && (PWDATA == 'h101) && (PADDR == 'h0) && 0;
             PREADY <= PENABLE;
             memory[2][0]  <= valid;
             memory[3][0]  <= busy;

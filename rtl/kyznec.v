@@ -33,7 +33,7 @@ reg [7:0] L_mul_251_mem [0:255];
 
 reg [2:0]   state;
 reg [127:0] data;
-reg [7:0]   value;
+//reg [7:0]   value;
 reg         busy;
 reg         valid;
 reg [127:0] datao;
@@ -62,7 +62,7 @@ begin
     if (!resetn_i)
     begin
         state <= `IDLE;
-        value <= 0;
+        //value <= 0;
         busy <= 0;
         valid <= 0;
         i <= 0;
@@ -75,7 +75,7 @@ begin
                 if (request_i)
                 begin
                     state <= `KEY_PHASE;
-                    value <= 0;
+                    //value <= 0;
                     busy <= 1;
                     valid <= 0;
                     data <= data_i;
@@ -135,7 +135,7 @@ begin
                         state <= `KEY_PHASE;
                         data <= data_i;
                         busy <= 0;
-                        value <= 0;
+                        //value <= 0;
                         valid <= 0;
                         i <= 0;
                     end
@@ -143,7 +143,7 @@ begin
                     begin 
                         state <= `IDLE;
                         busy <= 0;
-                        value <= 0;
+                        //value <= 0;
                         valid <= 0;
                         i <= 0;
                     end
